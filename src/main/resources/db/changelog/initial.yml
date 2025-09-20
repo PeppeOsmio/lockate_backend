@@ -1,0 +1,310 @@
+databaseChangeLog:
+- changeSet:
+    id: 1757774116578-1
+    author: peppeosmio (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ag_admin_tokenPK
+            name: token
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: anonymous_group_id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: expires_at
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        tableName: ag_admin_token
+- changeSet:
+    id: 1757774116578-2
+    author: peppeosmio (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ag_memberPK
+            name: id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: anonymous_group_id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        - column:
+            name: last_seen
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: name_auth_tag
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_cipher
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_iv
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_salt
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: token_hash
+            type: VARCHAR(255)
+        tableName: ag_member
+- changeSet:
+    id: 1757774116578-3
+    author: peppeosmio (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ag_member_locationPK
+            name: id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: ag_member_id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: anonymous_group_id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: coordinates_auth_tag
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: coordinates_cipher
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: coordinates_iv
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: coordinates_salt
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: timestamp
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        tableName: ag_member_location
+- changeSet:
+    id: 1757774116578-4
+    author: peppeosmio (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: anonymous_groupPK
+            name: id
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: admin_password_hash
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: member_password_srp_salt
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: member_password_srp_verifier
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_auth_tag
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_cipher
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_iv
+            type: BYTEA
+        - column:
+            constraints:
+              nullable: false
+            name: name_salt
+            type: BYTEA
+        tableName: anonymous_group
+- changeSet:
+    id: 1757774116578-5
+    author: peppeosmio (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: api_keyPK
+            name: key
+            type: UUID
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        - column:
+            name: last_validated
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        tableName: api_key
+- changeSet:
+    id: 1757774116578-6
+    author: peppeosmio (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: anonymous_group_id
+        indexName: idx_ag_admin_token_ag_id
+        tableName: ag_admin_token
+- changeSet:
+    id: 1757774116578-7
+    author: peppeosmio (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: anonymous_group_id
+        indexName: idx_ag_location_ag_id
+        tableName: ag_member_location
+- changeSet:
+    id: 1757774116578-8
+    author: peppeosmio (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: ag_member_id
+        indexName: idx_ag_location_ag_member_id
+        tableName: ag_member_location
+- changeSet:
+    id: 1757774116578-9
+    author: peppeosmio (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: anonymous_group_id
+        indexName: idx_ag_member_ag_id
+        tableName: ag_member
+- changeSet:
+    id: 1757774116578-10
+    author: peppeosmio (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: timestamp
+        indexName: idx_location_timestamp
+        tableName: ag_member_location
+- changeSet:
+    id: 1757774116578-11
+    author: peppeosmio (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: anonymous_group_id
+        baseTableName: ag_admin_token
+        constraintName: FK8s8id0sp82ejuqnws2i02dw40
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: anonymous_group
+        validate: true
+- changeSet:
+    id: 1757774116578-12
+    author: peppeosmio (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: anonymous_group_id
+        baseTableName: ag_member_location
+        constraintName: FKft99knrgv4k8r0a0emgc5wjke
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: anonymous_group
+        validate: true
+- changeSet:
+    id: 1757774116578-13
+    author: peppeosmio (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: ag_member_id
+        baseTableName: ag_member_location
+        constraintName: FKrqqul8il5e6ojn34jdef0p27f
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: ag_member
+        validate: true
+- changeSet:
+    id: 1757774116578-14
+    author: peppeosmio (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: anonymous_group_id
+        baseTableName: ag_member
+        constraintName: FKshcr3ffwyr1yxa0ccu6jf5i0o
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: anonymous_group
+        validate: true
+
