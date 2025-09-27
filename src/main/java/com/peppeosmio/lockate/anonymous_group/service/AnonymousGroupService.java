@@ -12,7 +12,7 @@ import com.peppeosmio.lockate.anonymous_group.exceptions.*;
 import com.peppeosmio.lockate.anonymous_group.repository.AGAdminTokenRepository;
 import com.peppeosmio.lockate.anonymous_group.repository.AnonymousGroupRepository;
 import com.peppeosmio.lockate.anonymous_group.repository.AGMemberRepository;
-import com.peppeosmio.lockate.anonymous_group.repository.AGLocationRepository;
+import com.peppeosmio.lockate.anonymous_group.repository.AGMemberLocationRepository;
 import com.peppeosmio.lockate.anonymous_group.security.AGAdminAuthentication;
 import com.peppeosmio.lockate.anonymous_group.security.AGMemberAuthentication;
 import com.peppeosmio.lockate.anonymous_group.service.result.AGAdminAuthResult;
@@ -46,7 +46,7 @@ public class AnonymousGroupService {
     private final AnonymousGroupRepository anonymousGroupRepository;
     private final AGMemberRepository agMemberRepository;
     private final AGAdminTokenRepository agAdminTokenRepository;
-    private final AGLocationRepository agLocationRepository;
+    private final AGMemberLocationRepository agMemberLocationRepository;
     private final RedisService redisService;
     private final SrpService srpService;
     private final ObjectMapper objectMapper;
@@ -55,14 +55,14 @@ public class AnonymousGroupService {
     public AnonymousGroupService(AnonymousGroupRepository anonymousGroupRepository,
                                  AGMemberRepository agMemberRepository,
                                  AGAdminTokenRepository agAdminTokenRepository,
-                                 AGLocationRepository agLocationRepository,
+                                 AGMemberLocationRepository agMemberLocationRepository,
                                  RedisService redisService, SrpService srpService,
                                  ObjectMapper objectMapper, EntityManager entityManager,
                                  EntityManager entityManager1) {
         this.agMemberRepository = agMemberRepository;
         this.anonymousGroupRepository = anonymousGroupRepository;
         this.agAdminTokenRepository = agAdminTokenRepository;
-        this.agLocationRepository = agLocationRepository;
+        this.agMemberLocationRepository = agMemberLocationRepository;
         this.redisService = redisService;
         this.srpService = srpService;
         this.objectMapper = objectMapper;
@@ -110,7 +110,7 @@ public class AnonymousGroupService {
                                           AGMemberEntity authenticatedAGMember) {
         var agMemberEntities = agEntity.getAgMemberEntities();
         var agLocationEntities =
-                agLocationRepository.findLatestLocationsPerMember(agEntity.getId());
+                agMemberLocationRepository.findLatestLocationsPerMember(agEntity.getId());
         var lastLocationsMap = new HashMap<UUID, AGLocationDto>();
         agLocationEntities.forEach(
                 (entity) -> lastLocationsMap.put(entity.getAgMemberId(),
@@ -257,7 +257,7 @@ public class AnonymousGroupService {
         var result = verifyMemberAuth(anonymousGroupId, authentication);
         var agEntity = result.anonymousGroupEntity();
         var agMemberEntity = result.agMemberEntity();
-        var agLocationEntity = agLocationRepository.save(
+        var agLocationEntity = agMemberLocationRepository.save(
                 AGMemberLocationEntity.fromBase64Fields(dto.encryptedLocation(),
                         agEntity, agMemberEntity));
         agMemberEntity.setLastSeen(agLocationEntity.getTimestamp());

@@ -1,4 +1,6 @@
 spring:
+  main:
+    web-application-type: servlet
   application:
     name: lockate
   threads:
@@ -14,8 +16,6 @@ spring:
       ddl-auto: none
     show-sql: true
     open-in-view: false
-  security:
-    enabled: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}
