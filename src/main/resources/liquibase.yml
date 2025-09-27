@@ -1,7 +1,7 @@
 liquibase:
   changelogFile: src/main/resources/db/changelog/db.changelog-master.yaml
   outputChangelogFile: src/main/resources/db/changelog/output.yml
-  diffChangelogFile: src/main/resources/db/changelog/diff_output.yml
+  diffChangelogFile: src/main/resources/db/changelog/initial.yml
   url: jdbc:postgresql://localhost:5432/lockate
   username: admin
   password: 1234

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/api-key")
 public class ApiKeyController {
 
-    private @Value("${lockate.require_api_key:false}") Boolean requireApiKey;
+    private @Value("${lockate.require-api-key:false}") Boolean requireApiKey;
 
     @GetMapping("/test")
     public void testApiKey() {

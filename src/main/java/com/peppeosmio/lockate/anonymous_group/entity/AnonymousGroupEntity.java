@@ -89,10 +89,6 @@ public class AnonymousGroupEntity {
 
     @OneToMany(mappedBy = "anonymousGroupEntity", fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private List<AGMemberLocationEntity> agMemberLocationEntities;
-
-    @OneToMany(mappedBy = "anonymousGroupEntity", fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @OrderBy("createdAt DESC, id DESC")
     private List<AGMemberEntity> agMemberEntities;
 

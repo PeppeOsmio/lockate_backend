@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "lockate.require_api_key", havingValue = "true")
+@ConditionalOnProperty(name = "lockate.require-api-key", havingValue = "true")
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
     private final ApiKeyService apiKeyService;
     private final ObjectMapper objectMapper;

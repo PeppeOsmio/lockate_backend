@@ -15,7 +15,6 @@ import java.util.UUID;
         name = "ag_member_location",
         indexes = {
                 @Index(name = "idx_location_timestamp", columnList = "timestamp"),
-                @Index(name = "idx_ag_location_ag_id", columnList = "anonymous_group_id"),
                 @Index(name = "idx_ag_location_ag_member_id", columnList = "ag_member_id")
         }
 )
@@ -33,8 +32,6 @@ public class AGMemberLocationEntity {
         this.coordinatesIv = encryptedCoordinates.iv();
         this.coordinatesAuthTag = encryptedCoordinates.authTag();
         this.coordinatesSalt = encryptedCoordinates.salt();
-        this.anonymousGroupEntity = anonymousGroupEntity;
-        this.anonymousGroupId = anonymousGroupEntity.getId();
         this.agMemberEntity = agMemberEntity;
         this.agMemberId = agMemberEntity.getId();
         this.timestamp = LocalDateTime.now();
@@ -68,14 +65,6 @@ public class AGMemberLocationEntity {
 
     @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
-
-    // Anonymous group
-    @Column(name = "anonymous_group_id", nullable = false, insertable = false, updatable = false)
-    private UUID anonymousGroupId;
-
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "anonymous_group_id", nullable = false)
-    private AnonymousGroupEntity anonymousGroupEntity;
 
     // Anonymous group member
     @Column(name = "ag_member_id", nullable = false, insertable = false, updatable = false)

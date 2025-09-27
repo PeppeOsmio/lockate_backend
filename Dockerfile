@@ -1,22 +1,19 @@
 # Use Amazon Corretto 21 as the base image
-FROM amazoncorretto:21-alpine-jdk as builder
+FROM amazoncorretto:21-alpine-jdk AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy the Maven/Gradle wrapper and configuration first (for caching dependencies)
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
 RUN ./mvnw dependency:go-offline -B
 
-# Copy source code
 COPY src src
 
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -Pprod
 
-FROM amazoncorretto:21-alpine-jdk
+FROM amazoncorretto:21-alpine
 
 WORKDIR /app
 

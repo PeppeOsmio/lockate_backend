@@ -1,4 +1,6 @@
 spring:
+  main:
+    web-application-type: servlet
   application:
     name: lockate
   threads:
@@ -14,8 +16,6 @@ spring:
       ddl-auto: none
     show-sql: true
     open-in-view: false
-  security:
-    enabled: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -32,4 +32,9 @@ logging:
         SQL: DEBUG
 
 lockate:
-  require_api_key: ${REQUIRE_API_KEY:true}
+  require-api-key: ${REQUIRE_API_KEY:true}
+  retention:
+    anonymous-group:
+      location:
+        cron: ${RETENTION_ANONYMOUS_GROUP_LOCATION_CRON:0 0 0 * * *}
+        duration: ${RETENTION_ANONYMOUS_GROUP_LOCATION_DURATION:P7D}

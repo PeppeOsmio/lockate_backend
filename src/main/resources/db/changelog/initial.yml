@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: 1757774116578-1
+    id: 1759073825868-1
     author: peppeosmio (generated)
     changes:
     - createTable:
@@ -29,7 +29,7 @@ databaseChangeLog:
             type: TIMESTAMP(6) WITHOUT TIME ZONE
         tableName: ag_admin_token
 - changeSet:
-    id: 1757774116578-2
+    id: 1759073825868-2
     author: peppeosmio (generated)
     changes:
     - createTable:
@@ -81,7 +81,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: ag_member
 - changeSet:
-    id: 1757774116578-3
+    id: 1759073825868-3
     author: peppeosmio (generated)
     changes:
     - createTable:
@@ -97,11 +97,6 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: ag_member_id
-            type: UUID
-        - column:
-            constraints:
-              nullable: false
-            name: anonymous_group_id
             type: UUID
         - column:
             constraints:
@@ -130,7 +125,7 @@ databaseChangeLog:
             type: TIMESTAMP(6) WITHOUT TIME ZONE
         tableName: ag_member_location
 - changeSet:
-    id: 1757774116578-4
+    id: 1759073825868-4
     author: peppeosmio (generated)
     changes:
     - createTable:
@@ -184,7 +179,7 @@ databaseChangeLog:
             type: BYTEA
         tableName: anonymous_group
 - changeSet:
-    id: 1757774116578-5
+    id: 1759073825868-5
     author: peppeosmio (generated)
     changes:
     - createTable:
@@ -206,7 +201,7 @@ databaseChangeLog:
             type: TIMESTAMP(6) WITHOUT TIME ZONE
         tableName: api_key
 - changeSet:
-    id: 1757774116578-6
+    id: 1759073825868-6
     author: peppeosmio (generated)
     changes:
     - createIndex:
@@ -216,17 +211,7 @@ databaseChangeLog:
         indexName: idx_ag_admin_token_ag_id
         tableName: ag_admin_token
 - changeSet:
-    id: 1757774116578-7
-    author: peppeosmio (generated)
-    changes:
-    - createIndex:
-        columns:
-        - column:
-            name: anonymous_group_id
-        indexName: idx_ag_location_ag_id
-        tableName: ag_member_location
-- changeSet:
-    id: 1757774116578-8
+    id: 1759073825868-7
     author: peppeosmio (generated)
     changes:
     - createIndex:
@@ -236,7 +221,7 @@ databaseChangeLog:
         indexName: idx_ag_location_ag_member_id
         tableName: ag_member_location
 - changeSet:
-    id: 1757774116578-9
+    id: 1759073825868-8
     author: peppeosmio (generated)
     changes:
     - createIndex:
@@ -246,7 +231,7 @@ databaseChangeLog:
         indexName: idx_ag_member_ag_id
         tableName: ag_member
 - changeSet:
-    id: 1757774116578-10
+    id: 1759073825868-9
     author: peppeosmio (generated)
     changes:
     - createIndex:
@@ -256,7 +241,7 @@ databaseChangeLog:
         indexName: idx_location_timestamp
         tableName: ag_member_location
 - changeSet:
-    id: 1757774116578-11
+    id: 1759073825868-10
     author: peppeosmio (generated)
     changes:
     - addForeignKeyConstraint:
@@ -269,20 +254,7 @@ databaseChangeLog:
         referencedTableName: anonymous_group
         validate: true
 - changeSet:
-    id: 1757774116578-12
-    author: peppeosmio (generated)
-    changes:
-    - addForeignKeyConstraint:
-        baseColumnNames: anonymous_group_id
-        baseTableName: ag_member_location
-        constraintName: FKft99knrgv4k8r0a0emgc5wjke
-        deferrable: false
-        initiallyDeferred: false
-        referencedColumnNames: id
-        referencedTableName: anonymous_group
-        validate: true
-- changeSet:
-    id: 1757774116578-13
+    id: 1759073825868-11
     author: peppeosmio (generated)
     changes:
     - addForeignKeyConstraint:
@@ -295,7 +267,7 @@ databaseChangeLog:
         referencedTableName: ag_member
         validate: true
 - changeSet:
-    id: 1757774116578-14
+    id: 1759073825868-12
     author: peppeosmio (generated)
     changes:
     - addForeignKeyConstraint:
