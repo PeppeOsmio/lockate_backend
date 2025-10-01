@@ -2,7 +2,7 @@ package com.peppeosmio.lockate.anonymous_group.entity;
 
 import com.peppeosmio.lockate.anonymous_group.exceptions.Base64Exception;
 import com.peppeosmio.lockate.common.classes.EncryptedString;
-import com.peppeosmio.lockate.common.dto.EncryptedStringDto;
+import com.peppeosmio.lockate.common.dto.EncryptedDataDto;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -26,32 +26,32 @@ public class AnonymousGroupEntity {
             EncryptedString encryptedName,
             byte[] memberPasswordSrpVerifier,
             byte[] memberPasswordSrpSalt,
-            String adminPasswordHash
-    ) {
+            String adminPasswordHash,
+            byte[] keySalt) {
         this.nameCipher = encryptedName.cipherText();
         this.nameIv = encryptedName.iv();
-        this.nameAuthTag = encryptedName.authTag();
-        this.nameSalt = encryptedName.salt();
         this.memberPasswordSrpVerifier = memberPasswordSrpVerifier;
         this.memberPasswordSrpSalt = memberPasswordSrpSalt;
         this.adminPasswordHash = adminPasswordHash;
         this.createdAt = LocalDateTime.now();
+        this.keySalt = keySalt;
     }
 
     public static AnonymousGroupEntity fromBase64Fields(
-            EncryptedStringDto encryptedNameDto,
+            EncryptedDataDto encryptedNameDto,
             String memberPasswordSrpVerifier,
             String memberPasswordSrpSalt,
-            String adminPasswordHash
-    ) throws Base64Exception {
+            String adminPasswordHash,
+            String keySalt)
+            throws Base64Exception {
         var decoder = Base64.getDecoder();
         try {
             return new AnonymousGroupEntity(
                     encryptedNameDto.toEncryptedString(),
                     decoder.decode(memberPasswordSrpVerifier),
                     decoder.decode(memberPasswordSrpSalt),
-                    adminPasswordHash
-            );
+                    adminPasswordHash,
+                    decoder.decode(keySalt));
         } catch (IllegalArgumentException e) {
             throw new Base64Exception();
         }
@@ -62,18 +62,11 @@ public class AnonymousGroupEntity {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    // Encrypted fields
-    @Column(name = "name_salt", nullable = false)
-    private byte[] nameSalt;
-
     @Column(name = "name_cipher", nullable = false)
     private byte[] nameCipher;
 
     @Column(name = "name_iv", nullable = false)
     private byte[] nameIv;
-
-    @Column(name = "name_auth_tag", nullable = false)
-    private byte[] nameAuthTag;
 
     @Column(name = "member_password_srp_verifier", nullable = false)
     private byte[] memberPasswordSrpVerifier;
@@ -84,8 +77,11 @@ public class AnonymousGroupEntity {
     @Column(name = "admin_password_hash", nullable = false)
     private String adminPasswordHash;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "key_salt", nullable = false)
+    private byte[] keySalt;
 
     @OneToMany(mappedBy = "anonymousGroupEntity", fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)

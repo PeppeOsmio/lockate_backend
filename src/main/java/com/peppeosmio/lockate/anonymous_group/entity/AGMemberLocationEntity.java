@@ -1,7 +1,7 @@
 package com.peppeosmio.lockate.anonymous_group.entity;
 
 import com.peppeosmio.lockate.common.classes.EncryptedString;
-import com.peppeosmio.lockate.common.dto.EncryptedStringDto;
+import com.peppeosmio.lockate.common.dto.EncryptedDataDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,25 +25,21 @@ public class AGMemberLocationEntity {
 
     public AGMemberLocationEntity(
             EncryptedString encryptedCoordinates,
-            AnonymousGroupEntity anonymousGroupEntity,
             AGMemberEntity agMemberEntity
     ) {
         this.coordinatesCipher = encryptedCoordinates.cipherText();
         this.coordinatesIv = encryptedCoordinates.iv();
-        this.coordinatesAuthTag = encryptedCoordinates.authTag();
-        this.coordinatesSalt = encryptedCoordinates.salt();
         this.agMemberEntity = agMemberEntity;
         this.agMemberId = agMemberEntity.getId();
         this.timestamp = LocalDateTime.now();
     }
 
     public static AGMemberLocationEntity fromBase64Fields(
-            EncryptedStringDto encryptedCoordinatesDto,
-            AnonymousGroupEntity anonymousGroupEntity,
+            EncryptedDataDto encryptedCoordinatesDto,
             AGMemberEntity agMemberEntity
     ) {
         var encryptedCoordinates = encryptedCoordinatesDto.toEncryptedString();
-        return new AGMemberLocationEntity(encryptedCoordinates, anonymousGroupEntity, agMemberEntity);
+        return new AGMemberLocationEntity(encryptedCoordinates, agMemberEntity);
     }
 
     @Id
@@ -56,12 +52,6 @@ public class AGMemberLocationEntity {
 
     @Column(name = "coordinates_iv", nullable = false)
     private byte[] coordinatesIv;
-
-    @Column(name = "coordinates_auth_tag", nullable = false)
-    private byte[] coordinatesAuthTag;
-
-    @Column(name = "coordinates_salt", nullable = false)
-    private byte[] coordinatesSalt;
 
     @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;

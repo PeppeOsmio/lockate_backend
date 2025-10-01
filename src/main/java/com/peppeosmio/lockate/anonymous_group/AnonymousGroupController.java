@@ -40,14 +40,14 @@ public class AnonymousGroupController {
 
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
-    AGCreateResponseDto createAnonymousGroup(@RequestBody AGCreateRequestDto dto)
+    AGCreateResDto createAnonymousGroup(@RequestBody AGCreateReqDto dto)
             throws Base64Exception {
         return anonymousGroupService.createAnonymousGroup(dto);
     }
 
     @GetMapping("/{anonymousGroupId}/members/auth/srp/info")
     @ResponseStatus(HttpStatus.OK)
-    AGGetMemberPasswordSrpInfoResponseDto getMemberSrpInfo(
+    AGGetMemberPasswordSrpInfoResDto getMemberSrpInfo(
             @PathVariable UUID anonymousGroupId) throws AGNotFoundException {
         return anonymousGroupService.getMemberSrpInfo(anonymousGroupId);
     }
@@ -105,8 +105,8 @@ public class AnonymousGroupController {
 
     @PostMapping("/{anonymousGroupId}/admin/auth/token")
     @ResponseStatus(HttpStatus.CREATED)
-    AGAdminTokenResponseDto getAdminToken(@PathVariable UUID anonymousGroupId,
-                                          @RequestBody AGAdminTokenRequestDto dto)
+    AGAdminTokenResDto getAdminToken(@PathVariable UUID anonymousGroupId,
+                                     @RequestBody AGAdminTokenReqDto dto)
             throws UnauthorizedException, AGNotFoundException {
         return anonymousGroupService.getAdminToken(anonymousGroupId, dto);
     }

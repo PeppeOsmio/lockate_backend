@@ -1,7 +1,7 @@
 package com.peppeosmio.lockate.anonymous_group.entity;
 
 import com.peppeosmio.lockate.common.classes.EncryptedString;
-import com.peppeosmio.lockate.common.dto.EncryptedStringDto;
+import com.peppeosmio.lockate.common.dto.EncryptedDataDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -33,8 +33,6 @@ public class AGMemberEntity {
         var tokenHash = BCrypt.hashpw(token, BCrypt.gensalt());
         this.nameCipher = encryptedUserName.cipherText();
         this.nameIv = encryptedUserName.iv();
-        this.nameAuthTag = encryptedUserName.authTag();
-        this.nameSalt = encryptedUserName.salt();
         this.tokenHash = tokenHash;
         this.createdAt = LocalDateTime.now();
         this.anonymousGroupEntity = anonymousGroupEntity;
@@ -42,7 +40,7 @@ public class AGMemberEntity {
     }
 
     public static AGMemberEntity fromBase64Fields(
-            EncryptedStringDto encryptedMemberNameDto,
+            EncryptedDataDto encryptedMemberNameDto,
             byte[] token,
             AnonymousGroupEntity anonymousGroupEntity
     ) {
@@ -68,11 +66,6 @@ public class AGMemberEntity {
     @Column(name = "name_iv", nullable = false)
     private byte[] nameIv;
 
-    @Column(name = "name_auth_tag", nullable = false)
-    private byte[] nameAuthTag;
-
-    @Column(name = "name_salt", nullable = false)
-    private byte[] nameSalt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

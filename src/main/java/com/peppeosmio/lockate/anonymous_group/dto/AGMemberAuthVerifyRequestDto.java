@@ -1,10 +1,10 @@
 package com.peppeosmio.lockate.anonymous_group.dto;
 
-import com.peppeosmio.lockate.common.dto.EncryptedStringDto;
+import com.peppeosmio.lockate.common.dto.EncryptedDataDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record AGMemberAuthVerifyRequestDto(@NotNull EncryptedStringDto encryptedUserName,
+public record AGMemberAuthVerifyRequestDto(@NotNull EncryptedDataDto encryptedMemberName,
                                            @NotBlank String srpSessionId,
                                            @NotBlank String M1) {
 }
