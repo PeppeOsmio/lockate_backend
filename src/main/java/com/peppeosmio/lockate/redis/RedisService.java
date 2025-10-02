@@ -1,18 +1,13 @@
 package com.peppeosmio.lockate.redis;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PreDestroy;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
-import org.springframework.data.redis.connection.Message;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;

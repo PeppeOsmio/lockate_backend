@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: [ "java", "-Dprofile=api", "-jar", "app.jar" ]
+    command: [ "java", "-jar", "app.jar", "--spring.profiles.active=api" ]
     ports:
       - "3118:3118"
     environment:
@@ -33,7 +33,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: [ "java", "-Dprofile=jobs", "-jar", "app.jar" ]
+    command: [ "java", "-jar", "app.jar", "--spring.profiles.active=jobs" ]
     environment:
       DB_URL: "postgresql://postgres:5432/lockate"
       DB_USERNAME: "${POSTGRES_USER}"
