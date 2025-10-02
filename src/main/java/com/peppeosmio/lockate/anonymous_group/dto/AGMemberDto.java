@@ -15,12 +15,12 @@ public record AGMemberDto(
         LocalDateTime createdAt,
         Optional<LocationRecordDto> encryptedLastLocationRecord) {
     public static AGMemberDto fromEntity(
-            AGMemberEntity entity, @Nullable EncryptedDataDto encryptedLastLocation) {
+            AGMemberEntity entity, @Nullable LocationRecordDto locationRecordDto) {
         var encoder = Base64.getEncoder();
         Optional<LocationRecordDto> agLocation = Optional.empty();
-        if (encryptedLastLocation != null) {
+        if (locationRecordDto != null) {
             agLocation =
-                    Optional.of(new LocationRecordDto(encryptedLastLocation, entity.getLastSeen()));
+                    Optional.of(locationRecordDto);
         }
         return new AGMemberDto(
                 entity.getId(),

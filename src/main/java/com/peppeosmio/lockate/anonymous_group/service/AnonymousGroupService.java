@@ -109,20 +109,16 @@ public class AnonymousGroupService {
         var agMemberEntities = agEntity.getAgMemberEntities();
         var agLocationEntities =
                 agMemberLocationRepository.findLatestLocationsPerMember(agEntity.getId());
-        var lastLocationsMap = new HashMap<UUID, LocationRecordDto>();
+        var lastLocationRecordsMap = new HashMap<UUID, LocationRecordDto>();
         agLocationEntities.forEach(
                 (entity) ->
-                        lastLocationsMap.put(
+                        lastLocationRecordsMap.put(
                                 entity.getAgMemberId(), LocationRecordDto.fromEntity(entity)));
         return agMemberEntities.stream()
                 .map(
                         (entity) -> {
-                            var lastLocation = lastLocationsMap.get(entity.getId());
-                            EncryptedDataDto lastCoordinates = null;
-                            if (lastLocation != null) {
-                                lastCoordinates = lastLocation.encryptedCoordinates();
-                            }
-                            return AGMemberDto.fromEntity(entity, lastCoordinates);
+                            var lastLocationRecord = lastLocationRecordsMap.get(entity.getId());
+                            return AGMemberDto.fromEntity(entity, lastLocationRecord);
                         })
                 .toList();
     }
