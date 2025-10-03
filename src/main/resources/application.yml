@@ -1,4 +1,6 @@
 spring:
+  liquibase:
+    enabled: false
   main:
     web-application-type: servlet
   application:
@@ -14,7 +16,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
+      show-sql: false
     open-in-view: false
   data:
     redis:
@@ -27,9 +29,7 @@ server:
 
 logging:
   level:
-    org:
-      hibernate:
-        SQL: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
 
 lockate:
   require-api-key: ${REQUIRE_API_KEY:true}

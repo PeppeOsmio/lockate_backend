@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -22,7 +23,7 @@ public class ApiKeyService {
     }
 
     public ApiKeyDto createApiKey() {
-        var apiKeyEntity = apiKeyRepository.save(new ApiKeyEntity(LocalDateTime.now()));
+        var apiKeyEntity = apiKeyRepository.save(new ApiKeyEntity(LocalDateTime.now(ZoneOffset.UTC)));
         return new ApiKeyDto(apiKeyEntity.getKey(), apiKeyEntity.getCreatedAt());
     }
 
@@ -32,7 +33,7 @@ public class ApiKeyService {
         if (apiKeyEntity.isEmpty()) {
             return false;
         }
-        apiKeyEntity.get().setLastValidated(LocalDateTime.now());
+        apiKeyEntity.get().setLastValidated(LocalDateTime.now(ZoneOffset.UTC));
         return true;
     }
 

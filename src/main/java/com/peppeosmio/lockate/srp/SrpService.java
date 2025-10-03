@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class SrpService {
         var encoder = Base64.getEncoder();
         var session = new SrpSession(encoder.encodeToString(A.toByteArray()),
                 encoder.encodeToString(server.getb().toByteArray()),
-                encoder.encodeToString(B.toByteArray()), LocalDateTime.now());
+                encoder.encodeToString(B.toByteArray()), LocalDateTime.now(ZoneOffset.UTC));
         var sessionKey = "srp:" + UUID.randomUUID();
         String sessionJson;
         try {

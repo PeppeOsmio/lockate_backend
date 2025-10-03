@@ -11,7 +11,7 @@ RUN ./mvnw dependency:go-offline -B
 
 COPY src src
 
-RUN ./mvnw clean package -Pprod
+RUN ./mvnw clean package -DskipTests
 
 FROM amazoncorretto:21-alpine
 

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -312,7 +313,7 @@ public class AnonymousGroupService {
         if (!BCrypt.checkpw(dto.adminPassword(), agEntity.getAdminPasswordHash())) {
             throw new UnauthorizedException();
         }
-        var now = LocalDateTime.now();
+        var now = LocalDateTime.now(ZoneOffset.UTC);
         var token =
                 agAdminTokenRepository.save(
                         new AGAdminTokenEntity(now, now.plusDays(7L), agEntity));

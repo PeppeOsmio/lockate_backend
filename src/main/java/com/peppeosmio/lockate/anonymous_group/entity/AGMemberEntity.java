@@ -9,6 +9,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +35,7 @@ public class AGMemberEntity {
         this.nameCipher = encryptedUserName.cipherText();
         this.nameIv = encryptedUserName.iv();
         this.tokenHash = tokenHash;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
         this.anonymousGroupEntity = anonymousGroupEntity;
         this.anonymousGroupId = anonymousGroupEntity.getId();
     }

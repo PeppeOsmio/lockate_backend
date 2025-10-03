@@ -10,6 +10,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -33,7 +34,7 @@ public class AnonymousGroupEntity {
         this.memberPasswordSrpVerifier = memberPasswordSrpVerifier;
         this.memberPasswordSrpSalt = memberPasswordSrpSalt;
         this.adminPasswordHash = adminPasswordHash;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
         this.keySalt = keySalt;
     }
 

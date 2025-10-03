@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Entity
@@ -31,7 +32,7 @@ public class AGMemberLocationEntity {
         this.coordinatesIv = encryptedCoordinates.iv();
         this.agMemberEntity = agMemberEntity;
         this.agMemberId = agMemberEntity.getId();
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public static AGMemberLocationEntity fromBase64Fields(
