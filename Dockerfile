@@ -1,5 +1,5 @@
 # Use Amazon Corretto 21 as the base image
-FROM amazoncorretto:21-alpine-jdk AS builder
+FROM amazoncorretto:25-alpine3.22-jdk AS builder
 
 WORKDIR /app
 
@@ -13,13 +13,13 @@ COPY src src
 
 RUN ./mvnw clean package -DskipTests
 
-FROM amazoncorretto:21-alpine
+FROM amazoncorretto:25-alpine3.22
 
 WORKDIR /app
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/target/*.jar lockate.jar
 
 EXPOSE 3118
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "lockate.jar"]

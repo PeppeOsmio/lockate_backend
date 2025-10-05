@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
   lockate-api:
     image: lockate:latest
-    command: [ "java", "-jar", "app.jar", "--spring.profiles.active=api" ]
+    command: [ "java", "-jar", "lockate.jar", "--spring.profiles.active=api" ]
     restart: unless-stopped
     ports:
       - "3118:3118"
@@ -39,7 +39,7 @@ services:
 
   lockate-jobs:
     image: lockate:latest
-    command: [ "java", "-jar", "app.jar", "--spring.profiles.active=jobs" ]
+    command: [ "java", "-jar", "lockate.jar", "--spring.profiles.active=jobs" ]
     restart: unless-stopped
     environment:
       DB_URL: "postgresql://postgres:5432/lockate"
@@ -53,7 +53,7 @@ services:
 
   lockate-liquibase:
     image: lockate:latest
-    command: [ "java", "-jar", "app.jar", "--spring.profiles.active=liquibase" ]
+    command: [ "java", "-jar", "lockate.jar", "--spring.profiles.active=liquibase" ]
     environment:
       DB_URL: "postgresql://postgres:5432/lockate"
       DB_USERNAME: "${POSTGRES_USER}"
