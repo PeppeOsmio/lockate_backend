@@ -22,7 +22,7 @@ public class LocationRetentionJob {
             AGMemberLocationRepository repository) {
         this.agLocationConfigurationProperties = agLocationConfigurationProperties;
         this.repository = repository;
-        log.info("[RetentionJob] Starting retention job");
+            log.info("[RetentionJob] Starting retention job");
     }
 
     @Scheduled(cron = "${lockate.retention.anonymous-group.location.cron:0 0 0 * * *}")

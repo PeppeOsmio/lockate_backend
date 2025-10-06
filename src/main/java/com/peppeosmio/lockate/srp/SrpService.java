@@ -50,15 +50,15 @@ public class SrpService {
         var session = new SrpSession(encoder.encodeToString(A.toByteArray()),
                 encoder.encodeToString(server.getb().toByteArray()),
                 encoder.encodeToString(B.toByteArray()), LocalDateTime.now(ZoneOffset.UTC));
-        var sessionKey = "srp:" + UUID.randomUUID();
+        var sessionId = "srp:" + UUID.randomUUID();
         String sessionJson;
         try {
             sessionJson = objectMapper.writeValueAsString(session);
         } catch (JsonProcessingException e) {
             throw new InvalidSrpSessionException();
         }
-        redisService.saveValue(sessionKey, sessionJson, Duration.ofMinutes(5));
-        return new SrpSessionResult(sessionKey, session);
+        redisService.saveValue(sessionId, sessionJson, Duration.ofMinutes(5));
+        return new SrpSessionResult(sessionId, session);
 
     }
 
@@ -80,6 +80,7 @@ public class SrpService {
                 new BigInteger(decoder.decode(srpSession.B())));
         var S = srpServer.calculateSecret(
                 new BigInteger(decoder.decode(srpSession.A())));
+        redisService.deleteValue(sessionId);
         return srpServer.verifyClientEvidenceMessage(M1);
     }
 }

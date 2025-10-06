@@ -17,6 +17,8 @@ FROM amazoncorretto:25-alpine3.22
 
 WORKDIR /app
 
+RUN apk add --no-cache curl
+
 COPY --from=builder /app/target/*.jar lockate.jar
 
 EXPOSE 3118

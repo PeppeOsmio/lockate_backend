@@ -38,7 +38,7 @@ public class AnonymousGroupController {
         return anonymousGroupService.getMembers(anonymousGroupId, authentication);
     }
 
-    @PostMapping("/")
+    @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
     AGCreateResDto createAnonymousGroup(@RequestBody AGCreateReqDto dto)
             throws Base64Exception {
