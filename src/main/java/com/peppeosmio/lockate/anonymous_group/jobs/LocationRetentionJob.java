@@ -1,7 +1,7 @@
 package com.peppeosmio.lockate.anonymous_group.jobs;
 
 import com.peppeosmio.lockate.anonymous_group.configuration_properties.AGLocationConfigurationProperties;
-import com.peppeosmio.lockate.anonymous_group.repository.AGMemberLocationRepository;
+import com.peppeosmio.lockate.anonymous_group.repository.AGLocationRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -15,11 +15,11 @@ import java.time.Instant;
 public class LocationRetentionJob {
 
     private final AGLocationConfigurationProperties agLocationConfigurationProperties;
-    private final AGMemberLocationRepository repository;
+    private final AGLocationRepository repository;
 
     public LocationRetentionJob(
             AGLocationConfigurationProperties agLocationConfigurationProperties,
-            AGMemberLocationRepository repository) {
+            AGLocationRepository repository) {
         this.agLocationConfigurationProperties = agLocationConfigurationProperties;
         this.repository = repository;
             log.info("[RetentionJob] Starting retention job");

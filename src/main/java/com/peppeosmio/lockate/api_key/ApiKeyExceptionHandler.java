@@ -2,7 +2,6 @@ package com.peppeosmio.lockate.api_key;
 
 import com.peppeosmio.lockate.anonymous_group.exceptions.Base64Exception;
 import com.peppeosmio.lockate.common.dto.ErrorResponseDto;
-import com.peppeosmio.lockate.srp.InvalidSrpSessionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

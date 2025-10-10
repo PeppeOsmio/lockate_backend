@@ -1,7 +1,6 @@
 package com.peppeosmio.lockate.redis;
 
 import jakarta.annotation.PreDestroy;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;

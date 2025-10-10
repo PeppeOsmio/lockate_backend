@@ -26,21 +26,23 @@ public class AGMemberLocationEntity {
 
     public AGMemberLocationEntity(
             EncryptedString encryptedCoordinates,
-            AGMemberEntity agMemberEntity
+            AGMemberEntity agMemberEntity,
+            LocalDateTime timestamp
     ) {
         this.coordinatesCipher = encryptedCoordinates.cipherText();
         this.coordinatesIv = encryptedCoordinates.iv();
         this.agMemberEntity = agMemberEntity;
         this.agMemberId = agMemberEntity.getId();
-        this.timestamp = LocalDateTime.now(ZoneOffset.UTC);
+        this.timestamp = timestamp;
     }
 
     public static AGMemberLocationEntity fromBase64Fields(
             EncryptedDataDto encryptedCoordinatesDto,
-            AGMemberEntity agMemberEntity
+            AGMemberEntity agMemberEntity,
+            LocalDateTime timestamp
     ) {
         var encryptedCoordinates = encryptedCoordinatesDto.toEncryptedString();
-        return new AGMemberLocationEntity(encryptedCoordinates, agMemberEntity);
+        return new AGMemberLocationEntity(encryptedCoordinates, agMemberEntity, timestamp);
     }
 
     @Id

@@ -1,5 +1,6 @@
 package com.peppeosmio.lockate.anonymous_group.repository;
 
+import com.peppeosmio.lockate.anonymous_group.entity.AGMemberEntity;
 import com.peppeosmio.lockate.anonymous_group.entity.AGMemberLocationEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
@@ -9,10 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface AGMemberLocationRepository
+public interface AGLocationRepository
         extends CrudRepository<AGMemberLocationEntity, UUID> {
     @NativeQuery(value = """
                 WITH ranked_locations AS (
@@ -48,4 +50,7 @@ public interface AGMemberLocationRepository
             )
             """)
     int deleteOldLocations(@Param("cutoff") Instant cutoff);
+
+    Optional<AGMemberLocationEntity> findFirstByAgMemberEntityOrderByTimestampDescIdDesc(
+            AGMemberEntity agMemberEntity);
 }

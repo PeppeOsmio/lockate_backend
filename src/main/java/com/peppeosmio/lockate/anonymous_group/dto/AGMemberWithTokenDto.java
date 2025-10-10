@@ -1,7 +1,6 @@
 package com.peppeosmio.lockate.anonymous_group.dto;
 
 import com.peppeosmio.lockate.anonymous_group.classes.AGMemberEntityWithToken;
-import com.peppeosmio.lockate.anonymous_group.entity.AGMemberEntity;
 
 import java.util.Base64;
 

@@ -12,7 +12,7 @@ import com.peppeosmio.lockate.anonymous_group.exceptions.*;
 import com.peppeosmio.lockate.anonymous_group.repository.AGAdminTokenRepository;
 import com.peppeosmio.lockate.anonymous_group.repository.AnonymousGroupRepository;
 import com.peppeosmio.lockate.anonymous_group.repository.AGMemberRepository;
-import com.peppeosmio.lockate.anonymous_group.repository.AGMemberLocationRepository;
+import com.peppeosmio.lockate.anonymous_group.repository.AGLocationRepository;
 import com.peppeosmio.lockate.anonymous_group.security.AGAdminAuthentication;
 import com.peppeosmio.lockate.anonymous_group.security.AGMemberAuthentication;
 import com.peppeosmio.lockate.anonymous_group.service.result.AGAdminAuthResult;
@@ -24,7 +24,10 @@ import com.peppeosmio.lockate.common.exceptions.UnauthorizedException;
 import com.peppeosmio.lockate.redis.RedisService;
 import com.peppeosmio.lockate.srp.InvalidSrpSessionException;
 import com.peppeosmio.lockate.srp.SrpService;
+import com.peppeosmio.lockate.utils.TTLMap;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Null;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.crypto.CryptoException;
 import org.springframework.security.core.Authentication;
@@ -34,6 +37,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -45,23 +50,25 @@ public class AnonymousGroupService {
     private final AnonymousGroupRepository anonymousGroupRepository;
     private final AGMemberRepository agMemberRepository;
     private final AGAdminTokenRepository agAdminTokenRepository;
-    private final AGMemberLocationRepository agMemberLocationRepository;
+    private final AGLocationRepository agLocationRepository;
     private final RedisService redisService;
     private final SrpService srpService;
     private final ObjectMapper objectMapper;
+    private final TTLMap<UUID, LocalDateTime> lastSavedLocationsCache =
+            new TTLMap<>(Duration.ofMinutes(5));
 
     public AnonymousGroupService(
             AnonymousGroupRepository anonymousGroupRepository,
             AGMemberRepository agMemberRepository,
             AGAdminTokenRepository agAdminTokenRepository,
-            AGMemberLocationRepository agMemberLocationRepository,
+            AGLocationRepository agLocationRepository,
             RedisService redisService,
             SrpService srpService,
             ObjectMapper objectMapper) {
         this.agMemberRepository = agMemberRepository;
         this.anonymousGroupRepository = anonymousGroupRepository;
         this.agAdminTokenRepository = agAdminTokenRepository;
-        this.agMemberLocationRepository = agMemberLocationRepository;
+        this.agLocationRepository = agLocationRepository;
         this.redisService = redisService;
         this.srpService = srpService;
         this.objectMapper = objectMapper;
@@ -109,7 +116,7 @@ public class AnonymousGroupService {
     private List<AGMemberDto> listMembers(AnonymousGroupEntity agEntity) {
         var agMemberEntities = agEntity.getAgMemberEntities();
         var agLocationEntities =
-                agMemberLocationRepository.findLatestLocationsPerMember(agEntity.getId());
+                agLocationRepository.findLatestLocationsPerMember(agEntity.getId());
         var lastLocationRecordsMap = new HashMap<UUID, LocationRecordDto>();
         agLocationEntities.forEach(
                 (entity) ->
@@ -265,20 +272,45 @@ public class AnonymousGroupService {
         var result = verifyMemberAuth(anonymousGroupId, authentication);
         var agEntity = result.anonymousGroupEntity();
         var agMemberEntity = result.agMemberEntity();
-        var agLocationEntity =
-                agMemberLocationRepository.save(
-                        AGMemberLocationEntity.fromBase64Fields(
-                                dto.encryptedLocation(), agMemberEntity));
-        agMemberEntity.setLastSeen(agLocationEntity.getTimestamp());
-        agMemberRepository.save(agMemberEntity);
-        var messageJson =
-                objectMapper.writeValueAsString(AGLocationUpdateDto.fromEntity(agLocationEntity));
+        var timestamp = LocalDateTime.now(ZoneOffset.UTC);
+        var locationUpdate =
+                new LocationUpdateDto(
+                        new LocationRecordDto(dto.encryptedLocation(), timestamp),
+                        agMemberEntity.getId());
+        var messageJson = objectMapper.writeValueAsString(locationUpdate);
         redisService.publish(getRedisAGLocationChannel(anonymousGroupId), messageJson);
+        LocalDateTime lastSavedLocationTimeStamp =
+                lastSavedLocationsCache.get(agMemberEntity.getId()).orElse(null);
+        if (lastSavedLocationTimeStamp == null) {
+            var lastSavedLocation =
+                    agLocationRepository
+                            .findFirstByAgMemberEntityOrderByTimestampDescIdDesc(agMemberEntity)
+                            .orElse(null);
+            if (lastSavedLocation != null) {
+                lastSavedLocationTimeStamp = lastSavedLocation.getTimestamp();
+            }
+        }
+        var shouldSave = false;
+        if(lastSavedLocationTimeStamp == null) {
+            shouldSave = true;
+        } else {
+            shouldSave = Duration.between(lastSavedLocationTimeStamp, timestamp).toMillis() >= 30000L;
+        }
+        if (shouldSave) {
+            var agLocationEntity =
+                    agLocationRepository.save(
+                            AGMemberLocationEntity.fromBase64Fields(
+                                    dto.encryptedLocation(), agMemberEntity, timestamp)
+                            );
+            agMemberEntity.setLastSeen(agLocationEntity.getTimestamp());
+            agMemberRepository.save(agMemberEntity);
+            lastSavedLocationsCache.put(agMemberEntity.getId(), timestamp);
+        }
     }
 
     public Runnable streamLocations(
             UUID anonymousGroupId,
-            Consumer<AGLocationUpdateDto> onLocation,
+            Consumer<LocationUpdateDto> onLocation,
             Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         var authenticatedAGMemberId =
@@ -290,10 +322,8 @@ public class AnonymousGroupService {
                         (message) -> {
                             try {
                                 var agLocationUpdate =
-                                        objectMapper.readValue(message, AGLocationUpdateDto.class);
-                                if (!agLocationUpdate
-                                        .agMemberId()
-                                        .equals(authenticatedAGMemberId)) {
+                                        objectMapper.readValue(message, LocationUpdateDto.class);
+                                if (!agLocationUpdate.memberId().equals(authenticatedAGMemberId)) {
                                     onLocation.accept(agLocationUpdate);
                                 }
                             } catch (JsonProcessingException e) {
