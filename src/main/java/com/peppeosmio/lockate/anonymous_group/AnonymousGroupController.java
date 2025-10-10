@@ -100,7 +100,7 @@ public class AnonymousGroupController {
                                @RequestBody AGLocationSaveRequestDto dto,
                                Authentication authentication)
             throws UnauthorizedException, AGNotFoundException, JsonProcessingException {
-        anonymousGroupService.saveLocation(anonymousGroupId, authentication, dto);
+        anonymousGroupService.saveLocation(anonymousGroupId, authentication, dto, null);
     }
 
     @PostMapping("/{anonymousGroupId}/admin/auth/token")

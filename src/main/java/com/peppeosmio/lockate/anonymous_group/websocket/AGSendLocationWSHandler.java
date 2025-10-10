@@ -4,16 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.peppeosmio.lockate.anonymous_group.dto.AGLocationSaveRequestDto;
 import com.peppeosmio.lockate.anonymous_group.exceptions.AGNotFoundException;
+import com.peppeosmio.lockate.anonymous_group.security.AGMemberAuthentication;
 import com.peppeosmio.lockate.anonymous_group.service.AnonymousGroupService;
 import com.peppeosmio.lockate.common.exceptions.UnauthorizedException;
+import com.peppeosmio.lockate.utils.TTLMap;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -22,6 +25,8 @@ public class AGSendLocationWSHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
     private final AnonymousGroupService anonymousGroupService;
+    private final TTLMap<UUID, LocalDateTime> lastSavedLocationsCache =
+            new TTLMap<>(Duration.ofMinutes(5));
 
     public AGSendLocationWSHandler(
             ObjectMapper objectMapper, AnonymousGroupService anonymousGroupService) {
@@ -35,9 +40,21 @@ public class AGSendLocationWSHandler extends TextWebSocketHandler {
         try {
             var sessionAttributes = session.getAttributes();
             var anonymousGroupId = (UUID) sessionAttributes.get("anonymousGroupId");
-            var authentication = (Authentication) sessionAttributes.get("authentication");
+            var authentication = (AGMemberAuthentication) sessionAttributes.get("authentication");
             var dto = objectMapper.readValue(message.getPayload(), AGLocationSaveRequestDto.class);
-            anonymousGroupService.saveLocation(anonymousGroupId, authentication, dto);
+            var lastSavedLocationTimestamp =
+                    lastSavedLocationsCache.get(authentication.getAGMemberId()).orElse(null);
+            var timestampSaved =
+                    anonymousGroupService
+                            .saveLocation(
+                                    anonymousGroupId,
+                                    authentication,
+                                    dto,
+                                    lastSavedLocationTimestamp)
+                            .orElse(null);
+            if (timestampSaved != null) {
+                lastSavedLocationsCache.put(authentication.getAGMemberId(), timestampSaved);
+            }
         } catch (AGNotFoundException | UnauthorizedException | JsonProcessingException e) {
             session.close(CloseStatus.BAD_DATA);
         } catch (Exception e) {

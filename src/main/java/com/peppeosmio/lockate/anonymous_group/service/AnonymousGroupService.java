@@ -54,8 +54,6 @@ public class AnonymousGroupService {
     private final RedisService redisService;
     private final SrpService srpService;
     private final ObjectMapper objectMapper;
-    private final TTLMap<UUID, LocalDateTime> lastSavedLocationsCache =
-            new TTLMap<>(Duration.ofMinutes(5));
 
     public AnonymousGroupService(
             AnonymousGroupRepository anonymousGroupRepository,
@@ -265,9 +263,20 @@ public class AnonymousGroupService {
         return new AGMemberAuthentication(agMemberId);
     }
 
+    /**
+     *
+     * @param anonymousGroupId
+     * @param authentication
+     * @param dto
+     * @param lastSavedLocationTimeStamp
+     * @return the LocalDateTime if it was saved in the db
+     * @throws AGNotFoundException
+     * @throws UnauthorizedException
+     * @throws JsonProcessingException
+     */
     @Transactional
-    public void saveLocation(
-            UUID anonymousGroupId, Authentication authentication, AGLocationSaveRequestDto dto)
+    public Optional<LocalDateTime> saveLocation(
+            UUID anonymousGroupId, Authentication authentication, AGLocationSaveRequestDto dto, @Nullable LocalDateTime lastSavedLocationTimeStamp)
             throws AGNotFoundException, UnauthorizedException, JsonProcessingException {
         var result = verifyMemberAuth(anonymousGroupId, authentication);
         var agEntity = result.anonymousGroupEntity();
@@ -279,8 +288,6 @@ public class AnonymousGroupService {
                         agMemberEntity.getId());
         var messageJson = objectMapper.writeValueAsString(locationUpdate);
         redisService.publish(getRedisAGLocationChannel(anonymousGroupId), messageJson);
-        LocalDateTime lastSavedLocationTimeStamp =
-                lastSavedLocationsCache.get(agMemberEntity.getId()).orElse(null);
         if (lastSavedLocationTimeStamp == null) {
             var lastSavedLocation =
                     agLocationRepository
@@ -304,8 +311,9 @@ public class AnonymousGroupService {
                             );
             agMemberEntity.setLastSeen(agLocationEntity.getTimestamp());
             agMemberRepository.save(agMemberEntity);
-            lastSavedLocationsCache.put(agMemberEntity.getId(), timestamp);
+            return Optional.of(timestamp);
         }
+        return Optional.empty();
     }
 
     public Runnable streamLocations(
