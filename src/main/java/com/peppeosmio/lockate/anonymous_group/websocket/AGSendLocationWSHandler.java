@@ -14,6 +14,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -32,6 +33,34 @@ public class AGSendLocationWSHandler extends TextWebSocketHandler {
             ObjectMapper objectMapper, AnonymousGroupService anonymousGroupService) {
         this.objectMapper = objectMapper;
         this.anonymousGroupService = anonymousGroupService;
+    }
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        var sessionAttributes = session.getAttributes();
+        var anonymousGroupId = (UUID) sessionAttributes.get("anonymousGroupId");
+        var authentication = (AGMemberAuthentication) sessionAttributes.get("authentication");
+        log.info(
+                "[WS] Receiving AG location: anonymousGroupId="
+                        + anonymousGroupId
+                        + " memberId="
+                        + authentication.getAGMemberId());
+        super.afterConnectionEstablished(session);
+    }
+
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status)
+            throws Exception {
+        var sessionAttributes = session.getAttributes();
+        var anonymousGroupId = (UUID) sessionAttributes.get("anonymousGroupId");
+        var authentication = (AGMemberAuthentication) sessionAttributes.get("authentication");
+        log.info(
+                "[WS] Stopped receiving AG location: anonymousGroupId="
+                        + anonymousGroupId
+                        + " memberId="
+                        + authentication.getAGMemberId()
+                        + " status="
+                        + status);
+        super.afterConnectionEstablished(session);
     }
 
     @Override

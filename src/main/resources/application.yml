@@ -29,7 +29,7 @@ server:
 
 logging:
   level:
-    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: INFO
 
 lockate:
   require-api-key: ${REQUIRE_API_KEY:true}

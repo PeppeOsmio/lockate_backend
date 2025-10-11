@@ -33,7 +33,6 @@ public class AGSendLocationHandshakeInterceptor implements HandshakeInterceptor 
                 var anonymousGroupId = UUID.fromString(segments[4]);
                 attributes.put("authentication", auth);
                 attributes.put("anonymousGroupId", anonymousGroupId);
-                log.info("Receving AG location. agId: " + anonymousGroupId + " agMemberId: " + ((AGMemberAuthentication) auth).getAGMemberId());
             } catch (Exception e) {
                 response.setStatusCode(HttpStatus.BAD_REQUEST);
                 return false;
@@ -46,7 +45,9 @@ public class AGSendLocationHandshakeInterceptor implements HandshakeInterceptor 
     }
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                               WebSocketHandler wsHandler, Exception exception) {}
+    public void afterHandshake(
+            ServerHttpRequest request,
+            ServerHttpResponse response,
+            WebSocketHandler wsHandler,
+            Exception exception) {}
 }
-
