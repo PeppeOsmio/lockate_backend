@@ -2,13 +2,15 @@ package com.peppeosmio.lockate.anonymous_group;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.peppeosmio.lockate.anonymous_group.dto.*;
-import com.peppeosmio.lockate.anonymous_group.exceptions.Base64Exception;
 import com.peppeosmio.lockate.anonymous_group.exceptions.AGNotFoundException;
+import com.peppeosmio.lockate.anonymous_group.exceptions.Base64Exception;
+import com.peppeosmio.lockate.anonymous_group.service.AnonymousGroupService;
 import com.peppeosmio.lockate.common.exceptions.NotFoundException;
 import com.peppeosmio.lockate.common.exceptions.UnauthorizedException;
-import com.peppeosmio.lockate.anonymous_group.service.AnonymousGroupService;
 import com.peppeosmio.lockate.srp.InvalidSrpSessionException;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -17,6 +19,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -32,48 +37,49 @@ public class AnonymousGroupController {
 
     @GetMapping("/{anonymousGroupId}/members")
     @ResponseStatus(HttpStatus.OK)
-    AGGetMembersResDto getAGMembers(@PathVariable UUID anonymousGroupId,
-                                    Authentication authentication)
+    AGGetMembersResDto getAGMembers(
+            @PathVariable UUID anonymousGroupId, Authentication authentication)
             throws AGNotFoundException, UnauthorizedException {
         return anonymousGroupService.getMembers(anonymousGroupId, authentication);
     }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    AGCreateResDto createAnonymousGroup(@RequestBody AGCreateReqDto dto)
-            throws Base64Exception {
+    AGCreateResDto createAnonymousGroup(@RequestBody AGCreateReqDto dto) throws Base64Exception {
         return anonymousGroupService.createAnonymousGroup(dto);
     }
 
     @GetMapping("/{anonymousGroupId}/members/auth/srp/info")
     @ResponseStatus(HttpStatus.OK)
-    AGGetMemberPasswordSrpInfoResDto getMemberSrpInfo(
-            @PathVariable UUID anonymousGroupId) throws AGNotFoundException {
+    AGGetMemberPasswordSrpInfoResDto getMemberSrpInfo(@PathVariable UUID anonymousGroupId)
+            throws AGNotFoundException {
         return anonymousGroupService.getMemberSrpInfo(anonymousGroupId);
     }
 
     @PostMapping("/{anonymousGroupId}/members/auth/srp/start")
-    AGMemberAuthStartResDto memberAuthStart(@PathVariable UUID anonymousGroupId,
-                                            @RequestBody
-                                                 AGMemberAuthStartReqDto dto)
-            throws UnauthorizedException, Base64Exception, AGNotFoundException,
-            InvalidSrpSessionException {
+    AGMemberAuthStartResDto memberAuthStart(
+            @PathVariable UUID anonymousGroupId, @RequestBody AGMemberAuthStartReqDto dto)
+            throws UnauthorizedException,
+                    Base64Exception,
+                    AGNotFoundException,
+                    InvalidSrpSessionException {
         return anonymousGroupService.startMemberSrpAuth(anonymousGroupId, dto);
     }
 
     @PostMapping("/{anonymousGroupId}/members/auth/srp/verify")
     @ResponseStatus(HttpStatus.OK)
-    AGMemberAuthVerifyResDto memberAuthVerify(@PathVariable UUID anonymousGroupId,
-                                              @RequestBody AGMemberAuthVerifyReqDto dto)
-            throws UnauthorizedException, NotFoundException, InvalidSrpSessionException,
-            Base64Exception {
+    AGMemberAuthVerifyResDto memberAuthVerify(
+            @PathVariable UUID anonymousGroupId, @RequestBody AGMemberAuthVerifyReqDto dto)
+            throws UnauthorizedException,
+                    NotFoundException,
+                    InvalidSrpSessionException,
+                    Base64Exception {
         return anonymousGroupService.verifyMemberSrpAuth(anonymousGroupId, dto);
     }
 
     @GetMapping("/{anonymousGroupId}/members/auth/verify")
     @ResponseStatus(HttpStatus.OK)
-    void verifyMemberAuth(@PathVariable UUID anonymousGroupId,
-                          Authentication authentication)
+    void verifyMemberAuth(@PathVariable UUID anonymousGroupId, Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         anonymousGroupService.verifyMemberAuth(anonymousGroupId, authentication);
     }
@@ -87,70 +93,76 @@ public class AnonymousGroupController {
 
     @GetMapping("/{anonymousGroupId}/members/count")
     @ResponseStatus(HttpStatus.OK)
-    AGGetMembersCountDto getMembersCount(@PathVariable UUID anonymousGroupId,
-                                         Authentication authentication)
+    AGGetMembersCountDto getMembersCount(
+            @PathVariable UUID anonymousGroupId, Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         return anonymousGroupService.getMembersCount(anonymousGroupId, authentication);
     }
 
     @PostMapping("/{anonymousGroupId}/locations")
     @ResponseStatus(HttpStatus.CREATED)
-    void saveAnonymousLocation(@PathVariable UUID anonymousGroupId,
-                               @RequestBody AGLocationSaveReqDto dto,
-                               Authentication authentication)
+    void saveAnonymousLocation(
+            @PathVariable UUID anonymousGroupId,
+            @RequestBody AGLocationSaveReqDto dto,
+            Authentication authentication)
             throws UnauthorizedException, AGNotFoundException, JsonProcessingException {
         anonymousGroupService.saveLocation(anonymousGroupId, authentication, dto, null);
     }
 
     @PostMapping("/{anonymousGroupId}/admin/auth/token")
     @ResponseStatus(HttpStatus.CREATED)
-    AGAdminTokenResDto getAdminToken(@PathVariable UUID anonymousGroupId,
-                                     @RequestBody AGAdminTokenReqDto dto)
+    AGAdminTokenResDto getAdminToken(
+            @PathVariable UUID anonymousGroupId, @RequestBody AGAdminTokenReqDto dto)
             throws UnauthorizedException, AGNotFoundException {
         return anonymousGroupService.getAdminToken(anonymousGroupId, dto);
     }
 
     @GetMapping("/{anonymousGroupId}/admin/auth/verify")
     @ResponseStatus(HttpStatus.OK)
-    void verifyAdminAuth(@PathVariable UUID anonymousGroupId,
-                         Authentication authentication)
+    void verifyAdminAuth(@PathVariable UUID anonymousGroupId, Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         anonymousGroupService.verifyAdminAuth(anonymousGroupId, authentication);
     }
 
     @DeleteMapping("/{anonymousGroupId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteAnonymousGroup(@PathVariable UUID anonymousGroupId, Authentication authentication)
+    public void deleteAnonymousGroup(
+            @PathVariable UUID anonymousGroupId, Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         anonymousGroupService.deleteAnonymousGroup(anonymousGroupId, authentication);
     }
 
     @GetMapping("/{anonymousGroupId}/locations")
     @ResponseStatus(HttpStatus.OK)
-    public SseEmitter streamLocations(@PathVariable UUID anonymousGroupId,
-                                      Authentication authentication)
+    public SseEmitter streamLocations(
+            @PathVariable UUID anonymousGroupId, Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         SseEmitter emitter = new SseEmitter(0L);
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                emitter.send(SseEmitter.event().comment("heartbeat"));
+            } catch (Exception e) {
+                // emitter.complete();
+                scheduler.shutdown();
+            }
+        }, 15, 15, TimeUnit.SECONDS);
         var unsubscribe =
-                anonymousGroupService.streamLocations(anonymousGroupId, (location) -> {
-                    try {
-                        emitter.send(
-                                SseEmitter.event().name("location").data(location));
-                    } catch (IOException e) {
-                        emitter.complete();
-                    }
-                }, authentication);
+                anonymousGroupService.streamLocations(
+                        anonymousGroupId,
+                        (location) -> {
+                            try {
+                                emitter.send(SseEmitter.event().name("location").data(location));
+                            } catch (IOException e) {
+                                emitter.complete();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                emitter.complete();
+                            }
+                        },
+                        authentication);
 
         emitter.onCompletion(unsubscribe);
-        emitter.onError((error) -> {
-            unsubscribe.run();
-            emitter.complete();
-        });
-        emitter.onTimeout(() -> {
-            unsubscribe.run();
-            emitter.complete();
-        });
-
         return emitter;
     }
 }

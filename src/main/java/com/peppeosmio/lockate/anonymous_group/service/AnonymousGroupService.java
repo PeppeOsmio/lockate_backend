@@ -115,14 +115,14 @@ public class AnonymousGroupService {
                         AGMemberEntity.fromBase64Fields(
                                 encryptedUserNameDto, token, anonymousGroupEntity));
         var encoder = Base64.getEncoder();
-        return new AGMemberWithTokenDto(agMemberMapper.toDto(agMemberEntity, null), encoder.encodeToString(token));
+        return new AGMemberWithTokenDto(
+                agMemberMapper.toDto(agMemberEntity, null), encoder.encodeToString(token));
     }
 
     @Transactional
     private List<AGMemberDto> listMembers(AnonymousGroupEntity agEntity) {
         var agMemberEntities = agEntity.getAgMemberEntities();
-        var agLocationEntities =
-                agLocationRepository.findLastLocationOfMembers(agEntity.getId());
+        var agLocationEntities = agLocationRepository.findLastLocationOfMembers(agEntity.getId());
         var lastLocationRecordsMap = new HashMap<UUID, LocationRecordDto>();
         agLocationEntities.forEach(
                 (entity) ->
@@ -166,9 +166,7 @@ public class AnonymousGroupService {
                                 new BCryptPasswordEncoder().encode(dto.adminPassword()),
                                 dto.keySalt()));
         var agMemberWithTokenDto = createMember(dto.encryptedMemberName(), agEntity);
-        return new AGCreateResDto(
-                anonymousGroupMapper.toDto(agEntity),
-                agMemberWithTokenDto);
+        return new AGCreateResDto(anonymousGroupMapper.toDto(agEntity), agMemberWithTokenDto);
     }
 
     public AGGetMemberPasswordSrpInfoResDto getMemberSrpInfo(UUID anonymousGroupId)
@@ -246,9 +244,7 @@ public class AnonymousGroupService {
             var agMemberWithTokenDto = createMember(dto.encryptedMemberName(), agEntity);
             var agMembers = listMembers(agEntity);
             return new AGMemberAuthVerifyResDto(
-                    anonymousGroupMapper.toDto(agEntity),
-                    agMemberWithTokenDto,
-                    agMembers);
+                    anonymousGroupMapper.toDto(agEntity), agMemberWithTokenDto, agMembers);
         } else {
             throw new UnauthorizedException();
         }
@@ -333,6 +329,11 @@ public class AnonymousGroupService {
             throws UnauthorizedException, AGNotFoundException {
         var authenticatedAGMemberId =
                 verifyMemberAuth(anonymousGroupId, authentication).agMemberEntity().getId();
+        log.info(
+                "[SSE] Streaming locations: anoymousGroupId="
+                        + anonymousGroupId
+                        + " memberId="
+                        + authenticatedAGMemberId);
         var channel = getRedisAGLocationChannel(anonymousGroupId);
         var messageListener =
                 redisService.subscribe(
@@ -348,7 +349,14 @@ public class AnonymousGroupService {
                                 e.printStackTrace();
                             }
                         });
-        return () -> redisService.unsubscribe(channel, messageListener);
+        return () -> {
+            redisService.unsubscribe(channel, messageListener);
+            log.info(
+                    "[SSE] Stopped streaming locations: anoymousGroupId="
+                            + anonymousGroupId
+                            + " memberId="
+                            + authenticatedAGMemberId);
+        };
     }
 
     @Transactional
