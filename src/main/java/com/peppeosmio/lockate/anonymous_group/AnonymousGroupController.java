@@ -32,8 +32,8 @@ public class AnonymousGroupController {
 
     @GetMapping("/{anonymousGroupId}/members")
     @ResponseStatus(HttpStatus.OK)
-    AGGetMembersResponseDto getAGMembers(@PathVariable UUID anonymousGroupId,
-                                         Authentication authentication)
+    AGGetMembersResDto getAGMembers(@PathVariable UUID anonymousGroupId,
+                                    Authentication authentication)
             throws AGNotFoundException, UnauthorizedException {
         return anonymousGroupService.getMembers(anonymousGroupId, authentication);
     }
@@ -53,9 +53,9 @@ public class AnonymousGroupController {
     }
 
     @PostMapping("/{anonymousGroupId}/members/auth/srp/start")
-    AGMemberAuthStartResponseDto memberAuthStart(@PathVariable UUID anonymousGroupId,
-                                                 @RequestBody
-                                                 AGMemberAuthStartRequestDto dto)
+    AGMemberAuthStartResDto memberAuthStart(@PathVariable UUID anonymousGroupId,
+                                            @RequestBody
+                                                 AGMemberAuthStartReqDto dto)
             throws UnauthorizedException, Base64Exception, AGNotFoundException,
             InvalidSrpSessionException {
         return anonymousGroupService.startMemberSrpAuth(anonymousGroupId, dto);
@@ -63,9 +63,8 @@ public class AnonymousGroupController {
 
     @PostMapping("/{anonymousGroupId}/members/auth/srp/verify")
     @ResponseStatus(HttpStatus.OK)
-    AGMemberAuthVerifyResponseDto memberAuthVerify(@PathVariable UUID anonymousGroupId,
-                                                   @RequestBody
-                                                   AGMemberAuthVerifyRequestDto dto)
+    AGMemberAuthVerifyResDto memberAuthVerify(@PathVariable UUID anonymousGroupId,
+                                              @RequestBody AGMemberAuthVerifyReqDto dto)
             throws UnauthorizedException, NotFoundException, InvalidSrpSessionException,
             Base64Exception {
         return anonymousGroupService.verifyMemberSrpAuth(anonymousGroupId, dto);
@@ -97,7 +96,7 @@ public class AnonymousGroupController {
     @PostMapping("/{anonymousGroupId}/locations")
     @ResponseStatus(HttpStatus.CREATED)
     void saveAnonymousLocation(@PathVariable UUID anonymousGroupId,
-                               @RequestBody AGLocationSaveRequestDto dto,
+                               @RequestBody AGLocationSaveReqDto dto,
                                Authentication authentication)
             throws UnauthorizedException, AGNotFoundException, JsonProcessingException {
         anonymousGroupService.saveLocation(anonymousGroupId, authentication, dto, null);
@@ -138,7 +137,7 @@ public class AnonymousGroupController {
                         emitter.send(
                                 SseEmitter.event().name("location").data(location));
                     } catch (IOException e) {
-                        emitter.completeWithError(e);
+                        emitter.complete();
                     }
                 }, authentication);
 

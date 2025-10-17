@@ -25,16 +25,16 @@ public interface AGLocationRepository
                         ROW_NUMBER() OVER (
                             PARTITION BY m.id
                             ORDER BY l.timestamp DESC
-                        ) AS rn
+                        ) AS row_number
                     FROM ag_member_location l
                     JOIN ag_member m ON l.ag_member_id = m.id
                     WHERE m.anonymous_group_id = :anonymousGroupId
                 )
                 SELECT *
                 FROM ranked_locations
-                WHERE rn = 1
+                WHERE row_number = 1
             """)
-    List<AGMemberLocationEntity> findLatestLocationsPerMember(
+    List<AGMemberLocationEntity> findLastLocationOfMembers(
             @Param("anonymousGroupId") UUID anonymousGroupId);
 
     @Modifying

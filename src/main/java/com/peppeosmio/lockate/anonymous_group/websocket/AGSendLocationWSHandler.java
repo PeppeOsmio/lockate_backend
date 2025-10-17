@@ -2,7 +2,7 @@ package com.peppeosmio.lockate.anonymous_group.websocket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peppeosmio.lockate.anonymous_group.dto.AGLocationSaveRequestDto;
+import com.peppeosmio.lockate.anonymous_group.dto.AGLocationSaveReqDto;
 import com.peppeosmio.lockate.anonymous_group.exceptions.AGNotFoundException;
 import com.peppeosmio.lockate.anonymous_group.security.AGMemberAuthentication;
 import com.peppeosmio.lockate.anonymous_group.service.AnonymousGroupService;
@@ -70,7 +70,7 @@ public class AGSendLocationWSHandler extends TextWebSocketHandler {
             var sessionAttributes = session.getAttributes();
             var anonymousGroupId = (UUID) sessionAttributes.get("anonymousGroupId");
             var authentication = (AGMemberAuthentication) sessionAttributes.get("authentication");
-            var dto = objectMapper.readValue(message.getPayload(), AGLocationSaveRequestDto.class);
+            var dto = objectMapper.readValue(message.getPayload(), AGLocationSaveReqDto.class);
             var lastSavedLocationTimestamp =
                     lastSavedLocationsCache.get(authentication.getAGMemberId()).orElse(null);
             var timestampSaved =

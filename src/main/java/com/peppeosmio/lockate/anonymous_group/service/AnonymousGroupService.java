@@ -2,17 +2,18 @@ package com.peppeosmio.lockate.anonymous_group.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peppeosmio.lockate.anonymous_group.classes.AGMemberEntityWithToken;
 import com.peppeosmio.lockate.anonymous_group.dto.*;
 import com.peppeosmio.lockate.anonymous_group.entity.AGAdminTokenEntity;
-import com.peppeosmio.lockate.anonymous_group.entity.AnonymousGroupEntity;
 import com.peppeosmio.lockate.anonymous_group.entity.AGMemberEntity;
 import com.peppeosmio.lockate.anonymous_group.entity.AGMemberLocationEntity;
+import com.peppeosmio.lockate.anonymous_group.entity.AnonymousGroupEntity;
 import com.peppeosmio.lockate.anonymous_group.exceptions.*;
+import com.peppeosmio.lockate.anonymous_group.mapper.AGMemberMapper;
+import com.peppeosmio.lockate.anonymous_group.mapper.AnonymousGroupMapper;
 import com.peppeosmio.lockate.anonymous_group.repository.AGAdminTokenRepository;
-import com.peppeosmio.lockate.anonymous_group.repository.AnonymousGroupRepository;
-import com.peppeosmio.lockate.anonymous_group.repository.AGMemberRepository;
 import com.peppeosmio.lockate.anonymous_group.repository.AGLocationRepository;
+import com.peppeosmio.lockate.anonymous_group.repository.AGMemberRepository;
+import com.peppeosmio.lockate.anonymous_group.repository.AnonymousGroupRepository;
 import com.peppeosmio.lockate.anonymous_group.security.AGAdminAuthentication;
 import com.peppeosmio.lockate.anonymous_group.security.AGMemberAuthentication;
 import com.peppeosmio.lockate.anonymous_group.service.result.AGAdminAuthResult;
@@ -24,11 +25,12 @@ import com.peppeosmio.lockate.common.exceptions.UnauthorizedException;
 import com.peppeosmio.lockate.redis.RedisService;
 import com.peppeosmio.lockate.srp.InvalidSrpSessionException;
 import com.peppeosmio.lockate.srp.SrpService;
-import com.peppeosmio.lockate.utils.TTLMap;
+
 import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.Null;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.bouncycastle.crypto.CryptoException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -38,7 +40,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -54,6 +55,8 @@ public class AnonymousGroupService {
     private final RedisService redisService;
     private final SrpService srpService;
     private final ObjectMapper objectMapper;
+    private final AnonymousGroupMapper anonymousGroupMapper;
+    private final AGMemberMapper agMemberMapper;
 
     public AnonymousGroupService(
             AnonymousGroupRepository anonymousGroupRepository,
@@ -62,7 +65,9 @@ public class AnonymousGroupService {
             AGLocationRepository agLocationRepository,
             RedisService redisService,
             SrpService srpService,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            AnonymousGroupMapper anonymousGroupMapper,
+            AGMemberMapper agMemberMapper) {
         this.agMemberRepository = agMemberRepository;
         this.anonymousGroupRepository = anonymousGroupRepository;
         this.agAdminTokenRepository = agAdminTokenRepository;
@@ -70,6 +75,8 @@ public class AnonymousGroupService {
         this.redisService = redisService;
         this.srpService = srpService;
         this.objectMapper = objectMapper;
+        this.anonymousGroupMapper = anonymousGroupMapper;
+        this.agMemberMapper = agMemberMapper;
     }
 
     private static String getRedisAGLocationChannel(UUID anonymousGroupId) {
@@ -98,23 +105,24 @@ public class AnonymousGroupService {
     }
 
     @Transactional
-    private AGMemberEntityWithToken createMember(
+    private AGMemberWithTokenDto createMember(
             EncryptedDataDto encryptedUserNameDto, AnonymousGroupEntity anonymousGroupEntity) {
         var secureRandom = new SecureRandom();
         var token = new byte[32];
         secureRandom.nextBytes(token);
-        var entity =
+        var agMemberEntity =
                 agMemberRepository.save(
                         AGMemberEntity.fromBase64Fields(
                                 encryptedUserNameDto, token, anonymousGroupEntity));
-        return new AGMemberEntityWithToken(entity, token);
+        var encoder = Base64.getEncoder();
+        return new AGMemberWithTokenDto(agMemberMapper.toDto(agMemberEntity, null), encoder.encodeToString(token));
     }
 
     @Transactional
     private List<AGMemberDto> listMembers(AnonymousGroupEntity agEntity) {
         var agMemberEntities = agEntity.getAgMemberEntities();
         var agLocationEntities =
-                agLocationRepository.findLatestLocationsPerMember(agEntity.getId());
+                agLocationRepository.findLastLocationOfMembers(agEntity.getId());
         var lastLocationRecordsMap = new HashMap<UUID, LocationRecordDto>();
         agLocationEntities.forEach(
                 (entity) ->
@@ -124,17 +132,18 @@ public class AnonymousGroupService {
                 .map(
                         (entity) -> {
                             var lastLocationRecord = lastLocationRecordsMap.get(entity.getId());
-                            return AGMemberDto.fromEntity(entity, lastLocationRecord);
+                            return agMemberMapper.toDto(entity, lastLocationRecord);
                         })
                 .toList();
     }
 
     @Transactional
-    public AGGetMembersResponseDto getMembers(UUID anonymousGroupId, Authentication authentication)
+    public AGGetMembersResDto getMembers(UUID anonymousGroupId, Authentication authentication)
             throws UnauthorizedException, AGNotFoundException {
         var result = verifyMemberAuth(anonymousGroupId, authentication);
         var agEntity = result.anonymousGroupEntity();
-        return new AGGetMembersResponseDto(listMembers(agEntity));
+        var agMembers = listMembers(agEntity);
+        return new AGGetMembersResDto(agMembers);
     }
 
     @Transactional
@@ -156,10 +165,10 @@ public class AnonymousGroupService {
                                 dto.memberPasswordSrpSalt(),
                                 new BCryptPasswordEncoder().encode(dto.adminPassword()),
                                 dto.keySalt()));
-        var agMemberEntityWithToken = createMember(dto.encryptedMemberName(), agEntity);
+        var agMemberWithTokenDto = createMember(dto.encryptedMemberName(), agEntity);
         return new AGCreateResDto(
-                AnonymousGroupDto.fromEntity(agEntity),
-                AGMemberWithTokenDto.fromEntityWithToken(agMemberEntityWithToken));
+                anonymousGroupMapper.toDto(agEntity),
+                agMemberWithTokenDto);
     }
 
     public AGGetMemberPasswordSrpInfoResDto getMemberSrpInfo(UUID anonymousGroupId)
@@ -179,8 +188,8 @@ public class AnonymousGroupService {
     }
 
     @Transactional
-    public AGMemberAuthStartResponseDto startMemberSrpAuth(
-            UUID anonymousGroupId, AGMemberAuthStartRequestDto dto)
+    public AGMemberAuthStartResDto startMemberSrpAuth(
+            UUID anonymousGroupId, AGMemberAuthStartReqDto dto)
             throws Base64Exception,
                     UnauthorizedException,
                     AGNotFoundException,
@@ -195,7 +204,7 @@ public class AnonymousGroupService {
                     srpService.startSrp(
                             new BigInteger(decoder.decode(dto.A())),
                             new BigInteger(anonymousGroupEntity.getMemberPasswordSrpVerifier()));
-            return new AGMemberAuthStartResponseDto(
+            return new AGMemberAuthStartResDto(
                     srpSessionResult.sessionId(), srpSessionResult.srpSession().B());
         } catch (CryptoException e) {
             e.printStackTrace();
@@ -207,8 +216,8 @@ public class AnonymousGroupService {
     }
 
     @Transactional
-    public AGMemberAuthVerifyResponseDto verifyMemberSrpAuth(
-            UUID anonymousGroupId, AGMemberAuthVerifyRequestDto dto)
+    public AGMemberAuthVerifyResDto verifyMemberSrpAuth(
+            UUID anonymousGroupId, AGMemberAuthVerifyReqDto dto)
             throws UnauthorizedException,
                     NotFoundException,
                     InvalidSrpSessionException,
@@ -234,12 +243,12 @@ public class AnonymousGroupService {
             throw new Base64Exception();
         }
         if (isValid) {
-            var agMemberEntityWithToken = createMember(dto.encryptedMemberName(), agEntity);
-            var members = listMembers(agEntity);
-            return new AGMemberAuthVerifyResponseDto(
-                    AnonymousGroupDto.fromEntity(agEntity),
-                    AGMemberWithTokenDto.fromEntityWithToken(agMemberEntityWithToken),
-                    members);
+            var agMemberWithTokenDto = createMember(dto.encryptedMemberName(), agEntity);
+            var agMembers = listMembers(agEntity);
+            return new AGMemberAuthVerifyResDto(
+                    anonymousGroupMapper.toDto(agEntity),
+                    agMemberWithTokenDto,
+                    agMembers);
         } else {
             throw new UnauthorizedException();
         }
@@ -264,7 +273,6 @@ public class AnonymousGroupService {
     }
 
     /**
-     *
      * @param anonymousGroupId
      * @param authentication
      * @param dto
@@ -276,7 +284,10 @@ public class AnonymousGroupService {
      */
     @Transactional
     public Optional<LocalDateTime> saveLocation(
-            UUID anonymousGroupId, Authentication authentication, AGLocationSaveRequestDto dto, @Nullable LocalDateTime lastSavedLocationTimeStamp)
+            UUID anonymousGroupId,
+            Authentication authentication,
+            AGLocationSaveReqDto dto,
+            @Nullable LocalDateTime lastSavedLocationTimeStamp)
             throws AGNotFoundException, UnauthorizedException, JsonProcessingException {
         var result = verifyMemberAuth(anonymousGroupId, authentication);
         var agEntity = result.anonymousGroupEntity();
@@ -297,19 +308,18 @@ public class AnonymousGroupService {
                 lastSavedLocationTimeStamp = lastSavedLocation.getTimestamp();
             }
         }
+        agMemberEntity.setLastSeen(timestamp);
         var shouldSave = false;
-        if(lastSavedLocationTimeStamp == null) {
+        if (lastSavedLocationTimeStamp == null) {
             shouldSave = true;
         } else {
-            shouldSave = Duration.between(lastSavedLocationTimeStamp, timestamp).toMillis() >= 30000L;
+            shouldSave =
+                    Duration.between(lastSavedLocationTimeStamp, timestamp).toMillis() >= 120000L;
         }
         if (shouldSave) {
-            var agLocationEntity =
-                    agLocationRepository.save(
-                            AGMemberLocationEntity.fromBase64Fields(
-                                    dto.encryptedLocation(), agMemberEntity, timestamp)
-                            );
-            agMemberEntity.setLastSeen(agLocationEntity.getTimestamp());
+            agLocationRepository.save(
+                    AGMemberLocationEntity.fromBase64Fields(
+                            dto.encryptedLocation(), agMemberEntity, timestamp));
             agMemberRepository.save(agMemberEntity);
             return Optional.of(timestamp);
         }
